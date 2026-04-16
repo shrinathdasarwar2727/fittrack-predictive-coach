@@ -131,7 +131,7 @@ function MiniBars({ values, labels, colorClass = 'bar-purple' }) {
 }
 
 function App() {
-  const { state, actions } = useAppState();
+  const { state, actions, auth } = useAppState();
   const [page, setPage] = useState('dashboard');
 
   const [workoutForm, setWorkoutForm] = useState({ date: toDateInputValue(new Date()), type: 'Running', amount: 40, sets: 1 });
@@ -159,6 +159,8 @@ function App() {
   });
   const [goalsDraft, setGoalsDraft] = useState({ goalWeight: state.goals.goalWeight, weeklyWorkoutTarget: state.goals.weeklyWorkoutTarget });
   const [logSaveMsg, setLogSaveMsg] = useState('');
+  const [authForm, setAuthForm] = useState({ email: '', password: '' });
+  const [authBusy, setAuthBusy] = useState(false);
   const useNormalizedCalories = state.settings?.useNormalizedCalories !== false;
   const avgWindowDays = Math.min(30, Math.max(3, Number(state.settings?.avgWindowDays) || 7));
   const projectionDays = Math.min(120, Math.max(7, Number(state.settings?.projectionDays) || 30));
@@ -510,6 +512,68 @@ function App() {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }
 
+  async function handleSignUp() {
+    const email = authForm.email.trim();
+    const password = authForm.password;
+    if (!email || !password) {
+      setLogSaveMsg('Enter email and password to sign up.');
+      return;
+    }
+
+    setAuthBusy(true);
+    try {
+      await auth.signUp(email, password);
+      setLogSaveMsg('Account created. If email confirmation is enabled, please verify your email first.');
+    } catch (err) {
+      setLogSaveMsg(err?.message || 'Sign up failed.');
+    } finally {
+      setAuthBusy(false);
+      setTimeout(() => setLogSaveMsg(''), 3500);
+    }
+  }
+
+  async function handleSignIn() {
+    const email = authForm.email.trim();
+    const password = authForm.password;
+    if (!email || !password) {
+      setLogSaveMsg('Enter email and password to sign in.');
+      return;
+    }
+
+    setAuthBusy(true);
+    try {
+      await auth.signIn(email, password);
+      setLogSaveMsg('Signed in. Cloud sync is active.');
+    } catch (err) {
+      setLogSaveMsg(err?.message || 'Sign in failed.');
+    } finally {
+      setAuthBusy(false);
+      setTimeout(() => setLogSaveMsg(''), 2500);
+    }
+  }
+
+  async function handleSignOut() {
+    setAuthBusy(true);
+    try {
+      await auth.signOut();
+      setAuthForm({ email: '', password: '' });
+      setLogSaveMsg('Signed out.');
+    } catch (err) {
+      setLogSaveMsg(err?.message || 'Sign out failed.');
+    } finally {
+      setAuthBusy(false);
+      setTimeout(() => setLogSaveMsg(''), 2200);
+    }
+  }
+
+  function cloudStatusLabel(status) {
+    if (status === 'syncing') return 'Syncing...';
+    if (status === 'ready') return 'Synced';
+    if (status === 'error') return 'Sync error';
+    if (status === 'disabled') return 'Supabase not configured';
+    return 'Idle';
+  }
+
   return (
     <div className="app-shell" data-theme={theme}>
       <DashboardLayout title="FitTrack Predictive Coach" subtitle="Premium Fitness Intelligence" theme={theme}>
@@ -790,6 +854,46 @@ function App() {
       {page === 'settings' && (
         <section className="glass-card">
           <h3>Settings</h3>
+
+          <div className="auth-box" style={{ marginTop: 10, marginBottom: 12 }}>
+            <h4 style={{ margin: 0 }}>Account and Cloud Sync</h4>
+            {!auth.isConfigured && <p className="muted" style={{ marginTop: 8 }}>Supabase is not configured yet. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.</p>}
+
+            {auth.isConfigured && (
+              <>
+                <p className="muted" style={{ marginTop: 8 }}>
+                  Status: {auth.authLoading ? 'Checking session...' : cloudStatusLabel(auth.cloudSyncStatus)}
+                </p>
+
+                {auth.user ? (
+                  <div className="row-actions" style={{ marginTop: 8 }}>
+                    <p className="muted">Signed in as {auth.user.email}</p>
+                    <button type="button" onClick={handleSignOut} disabled={authBusy}>Sign Out</button>
+                  </div>
+                ) : (
+                  <div className="field-grid" style={{ marginTop: 8 }}>
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={authForm.email}
+                      onChange={(e) => setAuthForm((prev) => ({ ...prev, email: e.target.value }))}
+                    />
+                    <input
+                      type="password"
+                      placeholder="Password"
+                      value={authForm.password}
+                      onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
+                    />
+                    <button type="button" onClick={handleSignIn} disabled={authBusy}>Sign In</button>
+                    <button type="button" className="btn-muted" onClick={handleSignUp} disabled={authBusy}>Sign Up</button>
+                  </div>
+                )}
+
+                {auth.authError && <p className="muted" style={{ marginTop: 8 }}>{auth.authError}</p>}
+              </>
+            )}
+          </div>
+
           <div className="settings-grid">
             <article className="setting-row"><div><p>Daily reminders</p><p className="muted">Get prompted to log workouts</p></div><button type="button" onClick={() => toggleSetting('remind')}>{state.settings.remind ? 'ON' : 'OFF'}</button></article>
             <article className="setting-row"><div><p>Achievement alerts</p><p className="muted">Celebrate your milestones</p></div><button type="button" onClick={() => toggleSetting('achieve')}>{state.settings.achieve ? 'ON' : 'OFF'}</button></article>

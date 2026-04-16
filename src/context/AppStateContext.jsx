@@ -1,6 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 const STORAGE_KEY = 'fittrack-premium-v1';
+const CLOUD_TABLE = 'fittrack_user_data';
 
 const INITIAL_STATE = {
   profile: {
@@ -41,28 +43,7 @@ function buildEmptyState() {
 
 const AppStateContext = createContext(null);
 
-function loadInitialState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return INITIAL_STATE;
-    const parsed = JSON.parse(raw);
-
-    return {
-      ...INITIAL_STATE,
-      ...parsed,
-      profile: { ...INITIAL_STATE.profile, ...(parsed.profile || {}) },
-      goals: { ...INITIAL_STATE.goals, ...(parsed.goals || {}) },
-      settings: { ...INITIAL_STATE.settings, ...(parsed.settings || {}) },
-      workouts: Array.isArray(parsed.workouts) ? parsed.workouts : INITIAL_STATE.workouts,
-      foodLogs: Array.isArray(parsed.foodLogs) ? parsed.foodLogs : INITIAL_STATE.foodLogs,
-      weightHistory: Array.isArray(parsed.weightHistory) ? parsed.weightHistory : INITIAL_STATE.weightHistory
-    };
-  } catch {
-    return INITIAL_STATE;
-  }
-}
-
-function sanitizeImportedState(raw) {
+function sanitizeState(raw) {
   if (!raw || typeof raw !== 'object') return INITIAL_STATE;
 
   return {
@@ -77,12 +58,152 @@ function sanitizeImportedState(raw) {
   };
 }
 
+function loadInitialState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return INITIAL_STATE;
+    return sanitizeState(JSON.parse(raw));
+  } catch {
+    return INITIAL_STATE;
+  }
+}
+
+function sanitizeImportedState(raw) {
+  return sanitizeState(raw);
+}
+
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(loadInitialState);
+  const [session, setSession] = useState(null);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(isSupabaseConfigured);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState(isSupabaseConfigured ? 'idle' : 'disabled');
+  const [authError, setAuthError] = useState('');
+  const isHydratingCloudRef = useRef(false);
+  const stateRef = useRef(state);
+
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
+
+  const persistCloudState = useCallback(async (userId, payload) => {
+    const { error } = await supabase
+      .from(CLOUD_TABLE)
+      .upsert({ user_id: userId, payload, updated_at: new Date().toISOString() });
+
+    if (error) throw error;
+  }, []);
+
+  const loadCloudState = useCallback(async (userId) => {
+    if (!isSupabaseConfigured) return;
+
+    isHydratingCloudRef.current = true;
+    setCloudSyncStatus('syncing');
+
+    try {
+      const { data, error } = await supabase
+        .from(CLOUD_TABLE)
+        .select('payload')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.payload) {
+        setState(sanitizeState(data.payload));
+      } else {
+        await persistCloudState(userId, stateRef.current);
+      }
+
+      setCloudSyncStatus('ready');
+      setAuthError('');
+    } catch (err) {
+      setCloudSyncStatus('error');
+      setAuthError(err?.message || 'Cloud sync failed.');
+    } finally {
+      isHydratingCloudRef.current = false;
+    }
+  }, [persistCloudState]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setAuthLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+
+    async function initAuth() {
+      const { data, error } = await supabase.auth.getSession();
+      if (!active) return;
+
+      if (error) {
+        setAuthError(error.message || 'Unable to initialize auth.');
+      }
+
+      setSession(data?.session || null);
+      setUser(data?.session?.user || null);
+
+      if (data?.session?.user) {
+        await loadCloudState(data.session.user.id);
+      }
+
+      if (active) setAuthLoading(false);
+    }
+
+    initAuth();
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession || null);
+      setUser(nextSession?.user || null);
+
+      if (nextSession?.user) {
+        loadCloudState(nextSession.user.id);
+      } else {
+        setCloudSyncStatus('idle');
+        setState(buildEmptyState());
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [loadCloudState]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !user || authLoading || isHydratingCloudRef.current) return;
+
+    let active = true;
+
+    async function syncState() {
+      setCloudSyncStatus('syncing');
+      try {
+        await persistCloudState(user.id, state);
+        if (active) {
+          setCloudSyncStatus('ready');
+          setAuthError('');
+        }
+      } catch (err) {
+        if (active) {
+          setCloudSyncStatus('error');
+          setAuthError(err?.message || 'Cloud sync failed.');
+        }
+      }
+    }
+
+    syncState();
+
+    return () => {
+      active = false;
+    };
+  }, [state, user, authLoading, persistCloudState]);
 
   const updateProfile = useCallback((updates) => {
     setState((prev) => ({ ...prev, profile: { ...prev.profile, ...updates } }));
@@ -168,9 +289,40 @@ export function AppStateProvider({ children }) {
     setState(sanitizeImportedState(nextState));
   }, []);
 
+  const signUp = useCallback(async (email, password) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+    const { error } = await supabase.auth.signUp({ email, password });
+    if (error) throw error;
+  }, []);
+
+  const signIn = useCallback(async (email, password) => {
+    if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (!isSupabaseConfigured) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    localStorage.removeItem(STORAGE_KEY);
+    setState(buildEmptyState());
+  }, []);
+
   const value = useMemo(
     () => ({
       state,
+      auth: {
+        isConfigured: isSupabaseConfigured,
+        session,
+        user,
+        authLoading,
+        cloudSyncStatus,
+        authError,
+        signUp,
+        signIn,
+        signOut
+      },
       actions: {
         updateProfile,
         updateGoals,
@@ -203,7 +355,15 @@ export function AppStateProvider({ children }) {
       updateWeightLog,
       deleteWeightLog,
       clearAllData,
-      importAllData
+      importAllData,
+      session,
+      user,
+      authLoading,
+      cloudSyncStatus,
+      authError,
+      signUp,
+      signIn,
+      signOut
     ]
   );
 
