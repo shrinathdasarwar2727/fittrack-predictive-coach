@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DashboardLayout,
   GlassCard,
@@ -117,6 +117,7 @@ function App() {
   const [laps, setLaps] = useState([]);
   const [fabOpen, setFabOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const importInputRef = useRef(null);
 
   const [profileDraft, setProfileDraft] = useState({
     name: state.profile.name,
@@ -145,6 +146,10 @@ function App() {
     });
     setGoalsDraft({ goalWeight: state.goals.goalWeight, weeklyWorkoutTarget: state.goals.weeklyWorkoutTarget });
   }, [state.profile, state.goals]);
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
 
   const sortedWeights = useMemo(() => [...state.weightHistory].sort((a, b) => new Date(`${a.date}T00:00:00`) - new Date(`${b.date}T00:00:00`)), [state.weightHistory]);
 
@@ -436,6 +441,32 @@ function App() {
     a.href = URL.createObjectURL(blob);
     a.download = 'fittrack-data.json';
     a.click();
+  }
+
+  async function importData(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      if (!parsed || typeof parsed !== 'object') throw new Error('Invalid JSON structure');
+      actions.importAllData(parsed);
+      setLogSaveMsg('Data imported successfully.');
+    } catch {
+      setLogSaveMsg('Import failed. Please select a valid FitTrack JSON export.');
+    } finally {
+      event.target.value = '';
+      setTimeout(() => setLogSaveMsg(''), 2600);
+    }
+  }
+
+  function handleClearAllData() {
+    const confirmed = window.confirm('Are you sure you want to clear all data? This cannot be undone.');
+    if (!confirmed) return;
+    actions.clearAllData();
+    setLogSaveMsg('All data cleared.');
+    setTimeout(() => setLogSaveMsg(''), 2200);
   }
 
   function goTo(pageName, closeFab = true) {
@@ -755,8 +786,19 @@ function App() {
               </div>
             </article>
             <article className="setting-row"><div><p>Export Data</p><p className="muted">Download JSON backup</p></div><button type="button" onClick={exportData}>Export</button></article>
-            <article className="setting-row"><div><p>Clear All Data</p><p className="muted">Reset app state</p></div><button type="button" className="btn-danger" onClick={actions.clearAllData}>Clear</button></article>
+            <article className="setting-row">
+              <div>
+                <p>Import Data</p>
+                <p className="muted">Restore from a FitTrack JSON backup</p>
+              </div>
+              <>
+                <input ref={importInputRef} type="file" accept="application/json,.json" onChange={importData} style={{ display: 'none' }} />
+                <button type="button" onClick={() => importInputRef.current?.click()}>Import</button>
+              </>
+            </article>
+            <article className="setting-row"><div><p>Clear All Data</p><p className="muted">Reset app state</p></div><button type="button" className="btn-danger" onClick={handleClearAllData}>Clear</button></article>
           </div>
+          {logSaveMsg && <p className="muted" style={{ marginTop: 10 }}>{logSaveMsg}</p>}
         </section>
       )}
 

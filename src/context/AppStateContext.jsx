@@ -63,6 +63,21 @@ function loadInitialState() {
   }
 }
 
+function sanitizeImportedState(raw) {
+  if (!raw || typeof raw !== 'object') return INITIAL_STATE;
+
+  return {
+    ...INITIAL_STATE,
+    ...raw,
+    profile: { ...INITIAL_STATE.profile, ...(raw.profile || {}) },
+    goals: { ...INITIAL_STATE.goals, ...(raw.goals || {}) },
+    settings: { ...INITIAL_STATE.settings, ...(raw.settings || {}) },
+    workouts: Array.isArray(raw.workouts) ? raw.workouts : INITIAL_STATE.workouts,
+    foodLogs: Array.isArray(raw.foodLogs) ? raw.foodLogs : INITIAL_STATE.foodLogs,
+    weightHistory: Array.isArray(raw.weightHistory) ? raw.weightHistory : INITIAL_STATE.weightHistory
+  };
+}
+
 export function AppStateProvider({ children }) {
   const [state, setState] = useState(loadInitialState);
 
@@ -149,6 +164,10 @@ export function AppStateProvider({ children }) {
     setState(INITIAL_STATE);
   }, []);
 
+  const importAllData = useCallback((nextState) => {
+    setState(sanitizeImportedState(nextState));
+  }, []);
+
   const value = useMemo(
     () => ({
       state,
@@ -165,7 +184,8 @@ export function AppStateProvider({ children }) {
         addWeightLog,
         updateWeightLog,
         deleteWeightLog,
-        clearAllData
+        clearAllData,
+        importAllData
       }
     }),
     [
@@ -182,7 +202,8 @@ export function AppStateProvider({ children }) {
       addWeightLog,
       updateWeightLog,
       deleteWeightLog,
-      clearAllData
+      clearAllData,
+      importAllData
     ]
   );
 

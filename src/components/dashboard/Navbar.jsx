@@ -16,7 +16,7 @@ const Wrap = styled.nav`
 const Tab = styled.button`
   border: 1px solid ${(props) => (props.active ? 'rgba(34, 211, 238, 0.42)' : 'rgba(255, 255, 255, 0.12)')};
   background: ${(props) => (props.active ? 'linear-gradient(120deg, rgba(79, 70, 229, 0.55), rgba(34, 211, 238, 0.42))' : 'rgba(255, 255, 255, 0.03)')};
-  color: #eef2ff;
+  color: var(--tab-text, #eef2ff);
   text-transform: capitalize;
   border-radius: 999px;
   padding: 0.52rem 0.95rem;
