@@ -4,15 +4,15 @@ const STORAGE_KEY = 'fittrack-premium-v1';
 
 const INITIAL_STATE = {
   profile: {
-    name: 'Athlete',
-    age: 28,
-    heightCm: 172,
-    currentWeight: 78,
+    name: '',
+    age: '',
+    heightCm: '',
+    currentWeight: '',
     gender: 'male'
   },
   goals: {
-    goalWeight: 70,
-    weeklyWorkoutTarget: 5
+    goalWeight: '',
+    weeklyWorkoutTarget: ''
   },
   settings: {
     remind: true,
