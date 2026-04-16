@@ -40,6 +40,17 @@ const INITIAL_STATE = {
   ]
 };
 
+function buildEmptyState() {
+  return {
+    profile: { ...INITIAL_STATE.profile },
+    goals: { ...INITIAL_STATE.goals },
+    settings: { ...INITIAL_STATE.settings },
+    workouts: [],
+    foodLogs: [],
+    weightHistory: []
+  };
+}
+
 const AppStateContext = createContext(null);
 
 function loadInitialState() {
@@ -161,7 +172,8 @@ export function AppStateProvider({ children }) {
   }, []);
 
   const clearAllData = useCallback(() => {
-    setState(INITIAL_STATE);
+    localStorage.removeItem(STORAGE_KEY);
+    setState(buildEmptyState());
   }, []);
 
   const importAllData = useCallback((nextState) => {
