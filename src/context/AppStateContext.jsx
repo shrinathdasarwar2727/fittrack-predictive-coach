@@ -1,5 +1,4 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { toDateInputValue } from '../utils/prediction';
 
 const STORAGE_KEY = 'fittrack-premium-v1';
 
@@ -24,20 +23,9 @@ const INITIAL_STATE = {
     avgWindowDays: 7,
     projectionDays: 30
   },
-  workouts: [
-    { id: 'w1', date: toDateInputValue(new Date()), type: 'Running', durationMin: 40, caloriesBurned: 420 },
-    { id: 'w2', date: toDateInputValue(new Date(Date.now() - 86400000)), type: 'Strength', durationMin: 50, caloriesBurned: 360 }
-  ],
-  foodLogs: [
-    { id: 'f1', date: toDateInputValue(new Date()), meal: 'Lunch Bowl', caloriesConsumed: 640 },
-    { id: 'f2', date: toDateInputValue(new Date(Date.now() - 86400000)), meal: 'Dinner', caloriesConsumed: 820 }
-  ],
-  weightHistory: [
-    { id: 'wh1', date: toDateInputValue(new Date(Date.now() - 1000 * 60 * 60 * 24 * 7)), weight: 79.2 },
-    { id: 'wh2', date: toDateInputValue(new Date(Date.now() - 1000 * 60 * 60 * 24 * 4)), weight: 78.8 },
-    { id: 'wh3', date: toDateInputValue(new Date(Date.now() - 1000 * 60 * 60 * 24 * 2)), weight: 78.4 },
-    { id: 'wh4', date: toDateInputValue(new Date()), weight: 78 }
-  ]
+  workouts: [],
+  foodLogs: [],
+  weightHistory: []
 };
 
 function buildEmptyState() {
