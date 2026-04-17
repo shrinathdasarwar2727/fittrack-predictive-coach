@@ -15,7 +15,10 @@ Create a `.env` file in the project root:
 ```
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-public-key
+VITE_SUPABASE_DETECT_SESSION_IN_URL=false
 ```
+
+Set `VITE_SUPABASE_DETECT_SESSION_IN_URL=false` to require users to enter email and password manually after clicking confirmation email links.
 
 Then restart the dev server.
 
