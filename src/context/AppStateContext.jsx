@@ -62,6 +62,69 @@ function sanitizeState(raw) {
   };
 }
 
+function makeSafeId(prefix, idx) {
+  const hasCrypto = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function';
+  if (hasCrypto) return `${prefix}-${crypto.randomUUID()}`;
+  return `${prefix}-${Date.now()}-${idx}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function normalizeImportedWorkouts(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).map((item, idx) => {
+    const base = item && typeof item === 'object' ? item : {};
+    let id = String(base.id || '').trim();
+    if (!id || seen.has(id)) id = makeSafeId('workout', idx);
+    seen.add(id);
+
+    return {
+      ...base,
+      id,
+      type: base.type || 'Running',
+      date: base.date || new Date().toISOString().slice(0, 10),
+      amount: Number(base.amount) || 0,
+      sets: Math.max(1, Number(base.sets) || 1),
+      durationMin: Number(base.durationMin) || 0,
+      caloriesBurned: Number(base.caloriesBurned) || 0,
+      unit: base.unit || 'min'
+    };
+  });
+}
+
+function normalizeImportedFoods(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).map((item, idx) => {
+    const base = item && typeof item === 'object' ? item : {};
+    let id = String(base.id || '').trim();
+    if (!id || seen.has(id)) id = makeSafeId('food', idx);
+    seen.add(id);
+
+    return {
+      ...base,
+      id,
+      meal: base.meal || 'Meal',
+      date: base.date || new Date().toISOString().slice(0, 10),
+      caloriesConsumed: Number(base.caloriesConsumed) || 0
+    };
+  });
+}
+
+function normalizeImportedWeights(list) {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : []).map((item, idx) => {
+    const base = item && typeof item === 'object' ? item : {};
+    let id = String(base.id || '').trim();
+    if (!id || seen.has(id)) id = makeSafeId('weight', idx);
+    seen.add(id);
+
+    return {
+      ...base,
+      id,
+      date: base.date || new Date().toISOString().slice(0, 10),
+      weight: Number(base.weight) || 0
+    };
+  });
+}
+
 function loadInitialState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -73,7 +136,13 @@ function loadInitialState() {
 }
 
 function sanitizeImportedState(raw) {
-  return sanitizeState(raw);
+  const next = sanitizeState(raw);
+  return {
+    ...next,
+    workouts: normalizeImportedWorkouts(next.workouts),
+    foodLogs: normalizeImportedFoods(next.foodLogs),
+    weightHistory: normalizeImportedWeights(next.weightHistory)
+  };
 }
 
 export function AppStateProvider({ children }) {
