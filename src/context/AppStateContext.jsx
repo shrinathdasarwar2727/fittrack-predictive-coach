@@ -291,7 +291,17 @@ export function AppStateProvider({ children }) {
 
   const signUp = useCallback(async (email, password) => {
     if (!isSupabaseConfigured) throw new Error('Supabase is not configured.');
-    const { error } = await supabase.auth.signUp({ email, password });
+    const emailRedirectTo = typeof window !== 'undefined'
+      ? `${window.location.origin}${window.location.pathname}`
+      : undefined;
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo
+      }
+    });
     if (error) throw error;
   }, []);
 
