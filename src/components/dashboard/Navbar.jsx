@@ -122,8 +122,9 @@ const Drawer = styled.aside`
   backdrop-filter: blur(16px);
   z-index: 80;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto 1fr;
   gap: 0.9rem;
+  overflow-y: auto;
   transform: ${(props) => (props.open ? 'translateX(0)' : 'translateX(-102%)')};
   transition: transform 280ms ease;
 
@@ -152,12 +153,18 @@ const DrawerTabs = styled.div`
   display: grid;
   gap: 0.55rem;
   align-content: start;
+  min-height: 0;
+  overflow-y: auto;
 `;
 
 const DrawerTab = styled(Tab)`
   width: 100%;
   text-align: left;
   border-radius: 12px;
+`;
+
+const DrawerThemeToggle = styled(ThemeToggle)`
+  width: 100%;
 `;
 
 function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
@@ -228,6 +235,12 @@ function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
           </CloseButton>
         </DrawerHead>
 
+        <DrawerThemeToggle type="button" onClick={onToggleTheme} isLight={isLight} aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}>
+          <ThemeThumb isLight={isLight} />
+          <ThemeLabel active={!isLight}>Dark</ThemeLabel>
+          <ThemeLabel active={isLight}>Light</ThemeLabel>
+        </DrawerThemeToggle>
+
         <DrawerTabs>
           {pages.map((p) => (
             <DrawerTab key={p} active={p === page} onClick={() => handleNavigate(p)}>
@@ -235,12 +248,6 @@ function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
             </DrawerTab>
           ))}
         </DrawerTabs>
-
-        <ThemeToggle type="button" onClick={onToggleTheme} isLight={isLight} aria-label={isLight ? 'Switch to dark mode' : 'Switch to light mode'}>
-          <ThemeThumb isLight={isLight} />
-          <ThemeLabel active={!isLight}>Dark</ThemeLabel>
-          <ThemeLabel active={isLight}>Light</ThemeLabel>
-        </ThemeToggle>
       </Drawer>
     </>
   );
