@@ -553,17 +553,66 @@ button:hover {
   box-shadow: 0 8px 20px rgba(20, 184, 166, 0.25);
 }
 
-.toggle-btn {
-  min-width: 112px;
+.modern-toggle {
+  position: relative;
+  min-width: 156px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 184, 166, 0.45);
+  padding: 0 12px 0 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow: hidden;
 }
 
-.toggle-btn.is-on {
+.modern-toggle.is-on {
+  background: linear-gradient(120deg, rgba(20, 184, 166, 0.24), rgba(20, 184, 166, 0.14));
+}
+
+.modern-toggle.is-off {
+  background: linear-gradient(120deg, rgba(71, 85, 105, 0.72), rgba(100, 116, 139, 0.65));
+  border-color: rgba(148, 163, 184, 0.42);
+}
+
+.modern-toggle-thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 32px;
+  height: 30px;
+  border-radius: 999px;
   background: linear-gradient(120deg, rgba(20, 184, 166, 0.96), rgba(20, 184, 166, 0.86));
+  box-shadow: 0 6px 14px rgba(20, 184, 166, 0.26);
+  transition: transform 260ms ease, background 220ms ease;
 }
 
-.toggle-btn.is-off {
-  background: linear-gradient(120deg, rgba(71, 85, 105, 0.95), rgba(100, 116, 139, 0.95));
-  color: #e2e8f0;
+.modern-toggle.is-off .modern-toggle-thumb {
+  background: linear-gradient(120deg, rgba(148, 163, 184, 0.95), rgba(148, 163, 184, 0.82));
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.2);
+}
+
+.modern-toggle.is-on .modern-toggle-thumb {
+  transform: translateX(116px);
+}
+
+.modern-toggle-text {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.modern-toggle:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
+body[data-theme='light'] .modern-toggle.is-off {
+  color: #122033;
+  background: linear-gradient(120deg, rgba(203, 213, 225, 0.88), rgba(203, 213, 225, 0.72));
+  border-color: rgba(148, 163, 184, 0.45);
 }
 
 .segment-btn.is-active {

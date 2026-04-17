@@ -1102,11 +1102,11 @@ function App() {
           </div>
 
           <div className="settings-grid">
-            <article className="setting-row"><div><p>Daily reminders</p><p className="muted">Get prompted to log workouts</p></div><button type="button" className={`toggle-btn ${state.settings.remind ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('remind')}>{state.settings.remind ? 'Enabled' : 'Disabled'}</button></article>
-            <article className="setting-row"><div><p>Achievement alerts</p><p className="muted">Celebrate your milestones</p></div><button type="button" className={`toggle-btn ${state.settings.achieve ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('achieve')}>{state.settings.achieve ? 'Enabled' : 'Disabled'}</button></article>
-            <article className="setting-row"><div><p>Imperial units</p><p className="muted">Switch to lbs</p></div><button type="button" className={`toggle-btn ${state.settings.imperial ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('imperial')}>{state.settings.imperial ? 'Enabled' : 'Disabled'}</button></article>
-            <article className="setting-row"><div><p>Show BMR in header</p><p className="muted">Display passive burn metric</p></div><button type="button" className={`toggle-btn ${state.settings.bmr ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('bmr')}>{state.settings.bmr ? 'Enabled' : 'Disabled'}</button></article>
-            <article className="setting-row"><div><p>Optimized calorie engine</p><p className="muted">Recompute legacy workouts for consistent active burn</p></div><button type="button" className={`toggle-btn ${useNormalizedCalories ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('useNormalizedCalories')}>{useNormalizedCalories ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row"><div><p>Daily reminders</p><p className="muted">Get prompted to log workouts</p></div><button type="button" className={`modern-toggle ${state.settings.remind ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('remind')} aria-pressed={state.settings.remind}><span className="modern-toggle-thumb" /><span className="modern-toggle-text">{state.settings.remind ? 'Enabled' : 'Disabled'}</span></button></article>
+            <article className="setting-row"><div><p>Achievement alerts</p><p className="muted">Celebrate your milestones</p></div><button type="button" className={`modern-toggle ${state.settings.achieve ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('achieve')} aria-pressed={state.settings.achieve}><span className="modern-toggle-thumb" /><span className="modern-toggle-text">{state.settings.achieve ? 'Enabled' : 'Disabled'}</span></button></article>
+            <article className="setting-row"><div><p>Imperial units</p><p className="muted">Switch to lbs</p></div><button type="button" className={`modern-toggle ${state.settings.imperial ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('imperial')} aria-pressed={state.settings.imperial}><span className="modern-toggle-thumb" /><span className="modern-toggle-text">{state.settings.imperial ? 'Enabled' : 'Disabled'}</span></button></article>
+            <article className="setting-row"><div><p>Show BMR in header</p><p className="muted">Display passive burn metric</p></div><button type="button" className={`modern-toggle ${state.settings.bmr ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('bmr')} aria-pressed={state.settings.bmr}><span className="modern-toggle-thumb" /><span className="modern-toggle-text">{state.settings.bmr ? 'Enabled' : 'Disabled'}</span></button></article>
+            <article className="setting-row"><div><p>Optimized calorie engine</p><p className="muted">Recompute legacy workouts for consistent active burn</p></div><button type="button" className={`modern-toggle ${useNormalizedCalories ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('useNormalizedCalories')} aria-pressed={useNormalizedCalories}><span className="modern-toggle-thumb" /><span className="modern-toggle-text">{useNormalizedCalories ? 'Enabled' : 'Disabled'}</span></button></article>
             <article className="setting-row">
               <div>
                 <p>Browser alerts permission</p>
@@ -1114,11 +1114,13 @@ function App() {
               </div>
               <button
                 type="button"
-                className={`toggle-btn ${notificationPermission === 'granted' ? 'is-on' : 'is-off'}`}
+                className={`modern-toggle ${notificationPermission === 'granted' ? 'is-on' : 'is-off'}`}
                 onClick={requestNotificationPermission}
                 disabled={notificationPermission === 'granted' || notificationPermission === 'unsupported'}
+                aria-pressed={notificationPermission === 'granted'}
               >
-                {notificationPermission === 'granted' ? 'Enabled' : 'Enable Alerts'}
+                <span className="modern-toggle-thumb" />
+                <span className="modern-toggle-text">{notificationPermission === 'granted' ? 'Enabled' : 'Enable Alerts'}</span>
               </button>
             </article>
             <article className="setting-row">
