@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+const MOBILE_BREAKPOINT = 1024;
+
 const Wrap = styled.nav`
   position: relative;
   padding: 0.85rem;
@@ -11,25 +13,17 @@ const Wrap = styled.nav`
 `;
 
 const DesktopRow = styled.div`
-  display: flex;
+  display: ${(props) => (props.hidden ? 'none' : 'flex')};
   gap: 0.65rem;
   overflow-x: auto;
   align-items: center;
-
-  @media (max-width: 860px) {
-    display: none;
-  }
 `;
 
 const MobileBar = styled.div`
-  display: none;
+  display: ${(props) => (props.visible ? 'flex' : 'none')};
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-
-  @media (max-width: 860px) {
-    display: flex;
-  }
 `;
 
 const Brand = styled.strong`
@@ -168,6 +162,21 @@ const DrawerTab = styled(Tab)`
 
 function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth <= MOBILE_BREAKPOINT;
+  });
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= MOBILE_BREAKPOINT);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) setMenuOpen(false);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!menuOpen) return undefined;
@@ -188,7 +197,7 @@ function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
   return (
     <>
       <Wrap>
-        <DesktopRow>
+        <DesktopRow hidden={isMobile}>
           {pages.map((p) => (
             <Tab key={p} active={p === page} onClick={() => onNavigate(p)}>
               {p}
@@ -202,7 +211,7 @@ function Navbar({ pages, page, onNavigate, isLight, onToggleTheme }) {
           </ThemeToggle>
         </DesktopRow>
 
-        <MobileBar>
+        <MobileBar visible={isMobile}>
           <Brand>FitTrack Menu</Brand>
           <HamburgerButton type="button" aria-label="Open navigation menu" onClick={() => setMenuOpen(true)}>
             ☰
