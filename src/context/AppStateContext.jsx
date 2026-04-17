@@ -3,6 +3,10 @@ import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 const STORAGE_KEY = 'fittrack-premium-v1';
 const CLOUD_TABLE = 'fittrack_user_data';
+const PROFILE_TABLE = 'fittrack_profiles';
+const WORKOUTS_TABLE = 'fittrack_workouts';
+const FOOD_TABLE = 'fittrack_food_logs';
+const WEIGHT_TABLE = 'fittrack_weight_history';
 
 const INITIAL_STATE = {
   profile: {
@@ -90,13 +94,110 @@ export function AppStateProvider({ children }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
+  const persistMirrorState = useCallback(async (userId, payload) => {
+    const profileRow = {
+      user_id: userId,
+      name: payload?.profile?.name || '',
+      age: Number(payload?.profile?.age) || 0,
+      height_cm: Number(payload?.profile?.heightCm) || 0,
+      current_weight: Number(payload?.profile?.currentWeight) || 0,
+      gender: payload?.profile?.gender || 'male',
+      goal_weight: Number(payload?.goals?.goalWeight) || 0,
+      weekly_workout_target: Number(payload?.goals?.weeklyWorkoutTarget) || 0,
+      settings: payload?.settings || {},
+      updated_at: new Date().toISOString()
+    };
+
+    const workouts = Array.isArray(payload?.workouts)
+      ? payload.workouts.map((w) => ({
+          id: String(w.id),
+          user_id: userId,
+          date: w.date,
+          type: w.type,
+          amount: Number(w.amount) || 0,
+          sets: Number(w.sets) || 1,
+          unit: w.unit || 'min',
+          duration_min: Number(w.durationMin) || 0,
+          calories_burned: Number(w.caloriesBurned) || 0,
+          updated_at: new Date().toISOString()
+        }))
+      : [];
+
+    const foodLogs = Array.isArray(payload?.foodLogs)
+      ? payload.foodLogs.map((f) => ({
+          id: String(f.id),
+          user_id: userId,
+          date: f.date,
+          meal: f.meal,
+          calories_consumed: Number(f.caloriesConsumed) || 0,
+          updated_at: new Date().toISOString()
+        }))
+      : [];
+
+    const weightHistory = Array.isArray(payload?.weightHistory)
+      ? payload.weightHistory.map((w) => ({
+          id: String(w.id),
+          user_id: userId,
+          date: w.date,
+          weight: Number(w.weight) || 0,
+          updated_at: new Date().toISOString()
+        }))
+      : [];
+
+    const { error: profileError } = await supabase
+      .from(PROFILE_TABLE)
+      .upsert(profileRow);
+    if (profileError) throw profileError;
+
+    const { error: wipeWorkoutsError } = await supabase
+      .from(WORKOUTS_TABLE)
+      .delete()
+      .eq('user_id', userId);
+    if (wipeWorkoutsError) throw wipeWorkoutsError;
+
+    if (workouts.length) {
+      const { error: workoutsError } = await supabase
+        .from(WORKOUTS_TABLE)
+        .insert(workouts);
+      if (workoutsError) throw workoutsError;
+    }
+
+    const { error: wipeFoodError } = await supabase
+      .from(FOOD_TABLE)
+      .delete()
+      .eq('user_id', userId);
+    if (wipeFoodError) throw wipeFoodError;
+
+    if (foodLogs.length) {
+      const { error: foodError } = await supabase
+        .from(FOOD_TABLE)
+        .insert(foodLogs);
+      if (foodError) throw foodError;
+    }
+
+    const { error: wipeWeightError } = await supabase
+      .from(WEIGHT_TABLE)
+      .delete()
+      .eq('user_id', userId);
+    if (wipeWeightError) throw wipeWeightError;
+
+    if (weightHistory.length) {
+      const { error: weightError } = await supabase
+        .from(WEIGHT_TABLE)
+        .insert(weightHistory);
+      if (weightError) throw weightError;
+    }
+  }, []);
+
   const persistCloudState = useCallback(async (userId, payload) => {
     const { error } = await supabase
       .from(CLOUD_TABLE)
       .upsert({ user_id: userId, payload, updated_at: new Date().toISOString() });
 
     if (error) throw error;
-  }, []);
+
+    await persistMirrorState(userId, payload);
+  }, [persistMirrorState]);
 
   const loadCloudState = useCallback(async (userId) => {
     if (!isSupabaseConfigured) return;
