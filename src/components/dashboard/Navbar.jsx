@@ -14,8 +14,8 @@ const Wrap = styled.nav`
 `;
 
 const Tab = styled.button`
-  border: 1px solid ${(props) => (props.active ? 'rgba(34, 211, 238, 0.42)' : 'rgba(255, 255, 255, 0.12)')};
-  background: ${(props) => (props.active ? 'linear-gradient(120deg, rgba(79, 70, 229, 0.55), rgba(34, 211, 238, 0.42))' : 'rgba(255, 255, 255, 0.03)')};
+  border: 1px solid ${(props) => (props.active ? 'rgba(20, 184, 166, 0.45)' : 'rgba(255, 255, 255, 0.18)')};
+  background: ${(props) => (props.active ? 'linear-gradient(120deg, rgba(20, 184, 166, 0.94), rgba(20, 184, 166, 0.82))' : 'rgba(255, 255, 255, 0.06)')};
   color: var(--tab-text, #eef2ff);
   text-transform: capitalize;
   border-radius: 999px;

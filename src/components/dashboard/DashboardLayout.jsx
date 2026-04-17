@@ -8,15 +8,19 @@ const GlobalDashboardTheme = createGlobalStyle`
     --glass-bg: rgba(16, 24, 40, 0.58);
     --glass-bg-strong: rgba(16, 24, 40, 0.74);
     --muted-text: #9aa8c4;
+    --accent: #14b8a6;
+    --tab-text: #eef2ff;
     color: #f5f8ff;
   }
 
   .app-shell[data-theme='light'] {
-    --page-bg: #e7edf8;
-    --page-bg-alt: #dbe7fb;
-    --glass-bg: rgba(255, 255, 255, 0.58);
-    --glass-bg-strong: rgba(255, 255, 255, 0.74);
-    --muted-text: #4f5f82;
+    --page-bg: #f3f7fb;
+    --page-bg-alt: #e8f0f8;
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-bg-strong: rgba(255, 255, 255, 0.95);
+    --muted-text: #4c5c75;
+    --accent: #14b8a6;
+    --tab-text: #102337;
     color: #162036;
   }
 `;
@@ -26,8 +30,8 @@ const LayoutShell = styled(motion.div)`
   border-radius: 1.2rem;
   padding: 1.25rem;
   background:
-    radial-gradient(900px 520px at 100% 0%, rgba(34, 211, 238, 0.14), transparent 62%),
-    radial-gradient(760px 500px at 0% 100%, rgba(79, 70, 229, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(20, 184, 166, 0.14), transparent 62%),
+    radial-gradient(760px 500px at 0% 100%, rgba(20, 184, 166, 0.1), transparent 60%),
     linear-gradient(165deg, var(--page-bg), var(--page-bg-alt));
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);

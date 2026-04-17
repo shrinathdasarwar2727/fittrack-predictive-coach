@@ -9,12 +9,12 @@ const StyledButton = styled(motion.button)`
   font-weight: 600;
   color: #f8fbff;
   cursor: pointer;
-  background: linear-gradient(125deg, #4f46e5, #22d3ee, #34d399);
-  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28);
+  background: linear-gradient(125deg, #14b8a6, #14b8a6);
+  box-shadow: 0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22);
   transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 16px 36px rgba(79, 70, 229, 0.52), 0 0 28px rgba(34, 211, 238, 0.36);
+    box-shadow: 0 16px 36px rgba(20, 184, 166, 0.44), 0 0 28px rgba(20, 184, 166, 0.3);
   }
 
   &:disabled {
@@ -29,7 +29,7 @@ function NeonButton({ children, type = 'button', ...props }) {
       type={type}
       whileHover={{ scale: 1.04 }}
       whileTap={{ scale: 0.98 }}
-      animate={{ boxShadow: ['0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28)', '0 14px 30px rgba(79, 70, 229, 0.52), 0 0 26px rgba(52, 211, 153, 0.35)', '0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28)'] }}
+      animate={{ boxShadow: ['0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22)', '0 14px 30px rgba(20, 184, 166, 0.44), 0 0 26px rgba(20, 184, 166, 0.3)', '0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22)'] }}
       transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
       {...props}
     >
