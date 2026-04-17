@@ -198,14 +198,13 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{n as t,r as n,t as r}f
 `,fe=o.span`
   position: absolute;
   top: 4px;
-  left: 4px;
+  left: ${e=>e.isLight?`calc(100% - 76px)`:`4px`};
   width: 72px;
   height: 30px;
   border-radius: 999px;
   background: linear-gradient(120deg, rgba(20, 184, 166, 0.96), rgba(20, 184, 166, 0.82));
   box-shadow: 0 8px 18px rgba(20, 184, 166, 0.24);
-  transform: ${e=>e.isLight?`translateX(84px)`:`translateX(0)`};
-  transition: transform 260ms ease;
+  transition: left 260ms ease;
 `,pe=o.span`
   position: relative;
   z-index: 1;
