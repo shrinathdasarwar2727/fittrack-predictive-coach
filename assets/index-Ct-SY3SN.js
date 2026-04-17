@@ -6,15 +6,19 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{n as t,r as n,t as r}f
     --glass-bg: rgba(16, 24, 40, 0.58);
     --glass-bg-strong: rgba(16, 24, 40, 0.74);
     --muted-text: #9aa8c4;
+    --accent: #14b8a6;
+    --tab-text: #eef2ff;
     color: #f5f8ff;
   }
 
   .app-shell[data-theme='light'] {
-    --page-bg: #e7edf8;
-    --page-bg-alt: #dbe7fb;
-    --glass-bg: rgba(255, 255, 255, 0.58);
-    --glass-bg-strong: rgba(255, 255, 255, 0.74);
-    --muted-text: #4f5f82;
+    --page-bg: #f3f7fb;
+    --page-bg-alt: #e8f0f8;
+    --glass-bg: rgba(255, 255, 255, 0.88);
+    --glass-bg-strong: rgba(255, 255, 255, 0.95);
+    --muted-text: #4c5c75;
+    --accent: #14b8a6;
+    --tab-text: #102337;
     color: #162036;
   }
 `,p=o(r.div)`
@@ -22,8 +26,8 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{n as t,r as n,t as r}f
   border-radius: 1.2rem;
   padding: 1.25rem;
   background:
-    radial-gradient(900px 520px at 100% 0%, rgba(34, 211, 238, 0.14), transparent 62%),
-    radial-gradient(760px 500px at 0% 100%, rgba(79, 70, 229, 0.14), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(20, 184, 166, 0.14), transparent 62%),
+    radial-gradient(760px 500px at 0% 100%, rgba(20, 184, 166, 0.1), transparent 60%),
     linear-gradient(165deg, var(--page-bg), var(--page-bg-alt));
   border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
@@ -142,19 +146,19 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{n as t,r as n,t as r}f
   font-weight: 600;
   color: #f8fbff;
   cursor: pointer;
-  background: linear-gradient(125deg, #4f46e5, #22d3ee, #34d399);
-  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28);
+  background: linear-gradient(125deg, #14b8a6, #14b8a6);
+  box-shadow: 0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22);
   transition: all 0.3s ease;
 
   &:hover {
-    box-shadow: 0 16px 36px rgba(79, 70, 229, 0.52), 0 0 28px rgba(34, 211, 238, 0.36);
+    box-shadow: 0 16px 36px rgba(20, 184, 166, 0.44), 0 0 28px rgba(20, 184, 166, 0.3);
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-`;function v({children:e,type:t=`button`,...n}){return(0,d.jsx)(re,{type:t,whileHover:{scale:1.04},whileTap:{scale:.98},animate:{boxShadow:[`0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28)`,`0 14px 30px rgba(79, 70, 229, 0.52), 0 0 26px rgba(52, 211, 153, 0.35)`,`0 10px 24px rgba(79, 70, 229, 0.4), 0 0 20px rgba(34, 211, 238, 0.28)`]},transition:{duration:2.2,repeat:1/0,ease:`easeInOut`},...n,children:e})}var ie=o.nav`
+`;function v({children:e,type:t=`button`,...n}){return(0,d.jsx)(re,{type:t,whileHover:{scale:1.04},whileTap:{scale:.98},animate:{boxShadow:[`0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22)`,`0 14px 30px rgba(20, 184, 166, 0.44), 0 0 26px rgba(20, 184, 166, 0.3)`,`0 10px 24px rgba(20, 184, 166, 0.34), 0 0 20px rgba(20, 184, 166, 0.22)`]},transition:{duration:2.2,repeat:1/0,ease:`easeInOut`},...n,children:e})}var ie=o.nav`
   display: flex;
   gap: 0.65rem;
   overflow-x: auto;
@@ -165,8 +169,8 @@ import{a as e}from"./rolldown-runtime-COnpUsM8.js";import{n as t,r as n,t as r}f
   background: var(--glass-bg-strong);
   backdrop-filter: blur(16px);
 `,ae=o.button`
-  border: 1px solid ${e=>e.active?`rgba(34, 211, 238, 0.42)`:`rgba(255, 255, 255, 0.12)`};
-  background: ${e=>e.active?`linear-gradient(120deg, rgba(79, 70, 229, 0.55), rgba(34, 211, 238, 0.42))`:`rgba(255, 255, 255, 0.03)`};
+  border: 1px solid ${e=>e.active?`rgba(20, 184, 166, 0.45)`:`rgba(255, 255, 255, 0.18)`};
+  background: ${e=>e.active?`linear-gradient(120deg, rgba(20, 184, 166, 0.94), rgba(20, 184, 166, 0.82))`:`rgba(255, 255, 255, 0.06)`};
   color: var(--tab-text, #eef2ff);
   text-transform: capitalize;
   border-radius: 999px;
