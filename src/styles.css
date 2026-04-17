@@ -77,6 +77,67 @@ p {
   gap: 16px;
 }
 
+.auth-shell {
+  max-width: 760px;
+  min-height: 100vh;
+  align-items: center;
+}
+
+.auth-page {
+  width: 100%;
+}
+
+.auth-card {
+  border: 1px solid var(--surface-line);
+  border-radius: 18px;
+  background: var(--surface-strong);
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(20, 30, 60, 0.22);
+}
+
+.auth-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.auth-tab.active {
+  border-color: rgba(34, 211, 238, 0.7);
+}
+
+.auth-form {
+  display: grid;
+  gap: 8px;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 76px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid var(--surface-line);
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.password-toggle:hover {
+  box-shadow: none;
+  transform: translateY(-50%);
+}
+
 .topbar {
   padding: 16px 18px;
   border-radius: var(--radius);

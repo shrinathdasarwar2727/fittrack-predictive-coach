@@ -159,7 +159,11 @@ function App() {
   });
   const [goalsDraft, setGoalsDraft] = useState({ goalWeight: state.goals.goalWeight, weeklyWorkoutTarget: state.goals.weeklyWorkoutTarget });
   const [logSaveMsg, setLogSaveMsg] = useState('');
-  const [authForm, setAuthForm] = useState({ email: '', password: '' });
+  const [authPage, setAuthPage] = useState('login');
+  const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+  const [signupForm, setSignupForm] = useState({ email: '', password: '' });
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const useNormalizedCalories = state.settings?.useNormalizedCalories !== false;
   const avgWindowDays = Math.min(30, Math.max(3, Number(state.settings?.avgWindowDays) || 7));
@@ -513,8 +517,8 @@ function App() {
   }
 
   async function handleSignUp() {
-    const email = authForm.email.trim();
-    const password = authForm.password;
+    const email = signupForm.email.trim();
+    const password = signupForm.password;
     if (!email || !password) {
       setLogSaveMsg('Enter email and password to sign up.');
       return;
@@ -523,7 +527,9 @@ function App() {
     setAuthBusy(true);
     try {
       await auth.signUp(email, password);
-      setLogSaveMsg('Account created. If email confirmation is enabled, please verify your email first.');
+      setLogSaveMsg('Account created. If email confirmation is enabled, verify email and then log in.');
+      setAuthPage('login');
+      setLoginForm((prev) => ({ ...prev, email }));
     } catch (err) {
       setLogSaveMsg(err?.message || 'Sign up failed.');
     } finally {
@@ -533,19 +539,19 @@ function App() {
   }
 
   async function handleSignIn() {
-    const email = authForm.email.trim();
-    const password = authForm.password;
+    const email = loginForm.email.trim();
+    const password = loginForm.password;
     if (!email || !password) {
-      setLogSaveMsg('Enter email and password to sign in.');
+      setLogSaveMsg('Enter email and password to log in.');
       return;
     }
 
     setAuthBusy(true);
     try {
       await auth.signIn(email, password);
-      setLogSaveMsg('Signed in. Cloud sync is active.');
+      setLogSaveMsg('Logged in. Cloud sync is active.');
     } catch (err) {
-      setLogSaveMsg(err?.message || 'Sign in failed.');
+      setLogSaveMsg(err?.message || 'Login failed.');
     } finally {
       setAuthBusy(false);
       setTimeout(() => setLogSaveMsg(''), 2500);
@@ -556,7 +562,9 @@ function App() {
     setAuthBusy(true);
     try {
       await auth.signOut();
-      setAuthForm({ email: '', password: '' });
+      setLoginForm({ email: '', password: '' });
+      setSignupForm({ email: '', password: '' });
+      setAuthPage('login');
       setLogSaveMsg('Signed out.');
     } catch (err) {
       setLogSaveMsg(err?.message || 'Sign out failed.');
@@ -572,6 +580,91 @@ function App() {
     if (status === 'error') return 'Sync error';
     if (status === 'disabled') return 'Supabase not configured';
     return 'Idle';
+  }
+
+  if (auth.isConfigured && !auth.authLoading && !auth.user) {
+    return (
+      <div className="app-shell auth-shell" data-theme={theme}>
+        <section className="auth-page">
+          <article className="auth-card">
+            <p className="eyebrow">FitTrack Account</p>
+            <h2>{authPage === 'login' ? 'Login' : 'Create account'}</h2>
+            <p className="muted" style={{ marginTop: 6 }}>
+              {authPage === 'login'
+                ? 'Log in to access your cloud profile and synced workout data.'
+                : 'Sign up once, then keep your profile and exercise history synced on any device.'}
+            </p>
+
+            <div className="auth-switch" style={{ marginTop: 14 }}>
+              <button type="button" className={authPage === 'login' ? 'auth-tab active' : 'auth-tab btn-muted'} onClick={() => setAuthPage('login')}>Login</button>
+              <button type="button" className={authPage === 'signup' ? 'auth-tab active' : 'auth-tab btn-muted'} onClick={() => setAuthPage('signup')}>Sign Up</button>
+            </div>
+
+            {authPage === 'login' ? (
+              <form className="auth-form" style={{ marginTop: 12 }} onSubmit={(e) => { e.preventDefault(); handleSignIn(); }}>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={loginForm.email}
+                  onChange={(e) => setLoginForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+                <div className="password-field">
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={loginForm.password}
+                    onChange={(e) => setLoginForm((prev) => ({ ...prev, password: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowLoginPassword((prev) => !prev)}
+                    aria-label={showLoginPassword ? 'Hide login password' : 'Show login password'}
+                  >
+                    {showLoginPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <button type="submit" disabled={authBusy}>{authBusy ? 'Logging in...' : 'Login'}</button>
+              </form>
+            ) : (
+              <form className="auth-form" style={{ marginTop: 12 }} onSubmit={(e) => { e.preventDefault(); handleSignUp(); }}>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={signupForm.email}
+                  onChange={(e) => setSignupForm((prev) => ({ ...prev, email: e.target.value }))}
+                />
+                <div className="password-field">
+                  <input
+                    type={showSignupPassword ? 'text' : 'password'}
+                    placeholder="Password (min 6 chars)"
+                    value={signupForm.password}
+                    onChange={(e) => setSignupForm((prev) => ({ ...prev, password: e.target.value }))}
+                  />
+                  <button
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowSignupPassword((prev) => !prev)}
+                    aria-label={showSignupPassword ? 'Hide sign up password' : 'Show sign up password'}
+                  >
+                    {showSignupPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <button type="submit" disabled={authBusy}>{authBusy ? 'Creating account...' : 'Create Account'}</button>
+              </form>
+            )}
+
+            {(logSaveMsg || auth.authError) && (
+              <p className="muted" style={{ marginTop: 10 }}>{auth.authError || logSaveMsg}</p>
+            )}
+
+            <div className="row-actions" style={{ marginTop: 12 }}>
+              <button type="button" className="btn-muted" onClick={toggleTheme}>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</button>
+            </div>
+          </article>
+        </section>
+      </div>
+    );
   }
 
   return (
@@ -864,31 +957,10 @@ function App() {
                 <p className="muted" style={{ marginTop: 8 }}>
                   Status: {auth.authLoading ? 'Checking session...' : cloudStatusLabel(auth.cloudSyncStatus)}
                 </p>
-
-                {auth.user ? (
-                  <div className="row-actions" style={{ marginTop: 8 }}>
-                    <p className="muted">Signed in as {auth.user.email}</p>
-                    <button type="button" onClick={handleSignOut} disabled={authBusy}>Sign Out</button>
-                  </div>
-                ) : (
-                  <div className="field-grid" style={{ marginTop: 8 }}>
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={authForm.email}
-                      onChange={(e) => setAuthForm((prev) => ({ ...prev, email: e.target.value }))}
-                    />
-                    <input
-                      type="password"
-                      placeholder="Password"
-                      value={authForm.password}
-                      onChange={(e) => setAuthForm((prev) => ({ ...prev, password: e.target.value }))}
-                    />
-                    <button type="button" onClick={handleSignIn} disabled={authBusy}>Sign In</button>
-                    <button type="button" className="btn-muted" onClick={handleSignUp} disabled={authBusy}>Sign Up</button>
-                  </div>
-                )}
-
+                <p className="muted" style={{ marginTop: 6 }}>Signed in as {auth.user?.email || 'Unknown user'}</p>
+                <div className="row-actions" style={{ marginTop: 8 }}>
+                  <button type="button" onClick={handleSignOut} disabled={authBusy}>Sign Out</button>
+                </div>
                 {auth.authError && <p className="muted" style={{ marginTop: 8 }}>{auth.authError}</p>}
               </>
             )}
