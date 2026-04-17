@@ -79,14 +79,13 @@ const ThemeToggle = styled.button`
 const ThemeThumb = styled.span`
   position: absolute;
   top: 4px;
-  left: 4px;
+  left: ${(props) => (props.isLight ? 'calc(100% - 76px)' : '4px')};
   width: 72px;
   height: 30px;
   border-radius: 999px;
   background: linear-gradient(120deg, rgba(20, 184, 166, 0.96), rgba(20, 184, 166, 0.82));
   box-shadow: 0 8px 18px rgba(20, 184, 166, 0.24);
-  transform: ${(props) => (props.isLight ? 'translateX(84px)' : 'translateX(0)')};
-  transition: transform 260ms ease;
+  transition: left 260ms ease;
 `;
 
 const ThemeLabel = styled.span`
