@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DashboardLayout,
   GlassCard,
@@ -70,12 +70,15 @@ const WORKOUT_LIBRARY = [
   { name: 'Cricket', icon: '🏏', unit: 'min', mode: 'time', met: 4.5, color: 'amber' }
 ];
 
-const NOTIFICATIONS = [
-  { text: 'Great job. You hit your calorie burn goal yesterday.', time: '2h ago', read: false },
-  { text: 'Your 7-day streak is going strong. Keep it up.', time: '1d ago', read: false },
-  { text: 'New workout recommendation available.', time: '2d ago', read: true },
-  { text: 'Increase active minutes to accelerate goal timeline.', time: '4d ago', read: true }
+const DEFAULT_NOTIFICATIONS = [
+  { id: 'seed-1', text: 'Great job. You hit your calorie burn goal yesterday.', time: '2h ago', read: false },
+  { id: 'seed-2', text: 'Your 7-day streak is going strong. Keep it up.', time: '1d ago', read: false },
+  { id: 'seed-3', text: 'New workout recommendation available.', time: '2d ago', read: true },
+  { id: 'seed-4', text: 'Increase active minutes to accelerate goal timeline.', time: '4d ago', read: true }
 ];
+
+const DAILY_REMINDER_STORAGE_KEY = 'fittrack-last-daily-reminder';
+const ACHIEVEMENT_STORAGE_KEY = 'fittrack-seen-achievements';
 
 function shortDate(isoDate) {
   const d = new Date(`${isoDate}T00:00:00`);
@@ -165,9 +168,46 @@ function App() {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [showSignupPassword, setShowSignupPassword] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
+  const [appNotifications, setAppNotifications] = useState(DEFAULT_NOTIFICATIONS);
+  const [notificationPermission, setNotificationPermission] = useState(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return 'unsupported';
+    return window.Notification.permission;
+  });
   const useNormalizedCalories = state.settings?.useNormalizedCalories !== false;
   const avgWindowDays = Math.min(30, Math.max(3, Number(state.settings?.avgWindowDays) || 7));
   const projectionDays = Math.min(120, Math.max(7, Number(state.settings?.projectionDays) || 30));
+
+  const pushNotification = useCallback((text) => {
+    setAppNotifications((prev) => [
+      {
+        id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        text,
+        time: 'just now',
+        read: false
+      },
+      ...prev
+    ].slice(0, 30));
+  }, []);
+
+  const sendBrowserNotification = useCallback((title, body) => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return;
+    if (window.Notification.permission !== 'granted') return;
+    window.Notification.close?.();
+    // Browser-level alert for reminders and achievements.
+    new window.Notification(title, { body });
+  }, []);
+
+  const requestNotificationPermission = useCallback(async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setLogSaveMsg('Browser alerts are not supported in this browser.');
+      return;
+    }
+
+    const permission = await window.Notification.requestPermission();
+    setNotificationPermission(permission);
+    setLogSaveMsg(permission === 'granted' ? 'Browser alerts enabled.' : 'Browser alerts blocked.');
+    setTimeout(() => setLogSaveMsg(''), 2200);
+  }, []);
 
   useEffect(() => {
     if (!timerRunning) return undefined;
@@ -291,16 +331,92 @@ function App() {
     return workoutsForCalculations.filter((w) => dates.has(w.date)).length;
   }, [workoutsForCalculations, recentTotals.labels]);
 
+  const achievements = useMemo(() => {
+    const target = Math.max(1, Number(state.goals.weeklyWorkoutTarget) || 1);
+    const workoutBurnMax = workoutsForCalculations.reduce((max, w) => Math.max(max, Number(w.caloriesBurned) || 0), 0);
+
+    return [
+      {
+        id: 'first-workout',
+        title: 'First Workout Logged',
+        detail: 'Start your journey by logging at least one workout.',
+        unlocked: workoutsForCalculations.length >= 1
+      },
+      {
+        id: 'weekly-goal',
+        title: 'Weekly Target Reached',
+        detail: `Complete ${target} workouts in your current weekly window.`,
+        unlocked: workoutsThisWeek >= target
+      },
+      {
+        id: 'high-burn',
+        title: '500 Calorie Session',
+        detail: 'Finish one workout with 500+ calories burned.',
+        unlocked: workoutBurnMax >= 500
+      },
+      {
+        id: 'consistent-weigh-ins',
+        title: '7 Weight Entries',
+        detail: 'Log your weight at least 7 times.',
+        unlocked: sortedWeights.length >= 7
+      },
+      {
+        id: 'goal-achieved',
+        title: 'Goal Achieved',
+        detail: 'Reach your goal weight based on tracked trend.',
+        unlocked: Number(state.goals.goalWeight) > 0 && prediction.daysToGoal === 0
+      }
+    ];
+  }, [state.goals.weeklyWorkoutTarget, state.goals.goalWeight, workoutsForCalculations, workoutsThisWeek, sortedWeights.length, prediction.daysToGoal]);
+
   const todayIso = toDateInputValue(new Date());
   const foodToday = useMemo(() => state.foodLogs.filter((f) => f.date === todayIso), [state.foodLogs, todayIso]);
+  const workoutsToday = useMemo(() => workoutsForCalculations.filter((w) => w.date === todayIso), [workoutsForCalculations, todayIso]);
   const todayFoodTotal = useMemo(() => foodToday.reduce((acc, f) => acc + (Number(f.caloriesConsumed) || 0), 0), [foodToday]);
 
   const todayWorkoutBurn = useMemo(
-    () => workoutsForCalculations.filter((w) => w.date === todayIso).reduce((acc, w) => acc + (Number(w.caloriesBurned) || 0), 0),
-    [workoutsForCalculations, todayIso]
+    () => workoutsToday.reduce((acc, w) => acc + (Number(w.caloriesBurned) || 0), 0),
+    [workoutsToday]
   );
   const todayTotalBurn = useMemo(() => bmr + todayWorkoutBurn, [bmr, todayWorkoutBurn]);
   const todayNetBalance = useMemo(() => todayTotalBurn - todayFoodTotal, [todayTotalBurn, todayFoodTotal]);
+
+  useEffect(() => {
+    if (!state.settings.remind) return;
+
+    const lastReminderDate = localStorage.getItem(DAILY_REMINDER_STORAGE_KEY);
+    if (lastReminderDate === todayIso) return;
+
+    if (workoutsToday.length === 0) {
+      pushNotification('Daily reminder: log one workout to keep your routine on track.');
+      sendBrowserNotification('FitTrack Reminder', 'Log one workout today to keep your streak alive.');
+    }
+
+    localStorage.setItem(DAILY_REMINDER_STORAGE_KEY, todayIso);
+  }, [state.settings.remind, todayIso, workoutsToday.length, pushNotification, sendBrowserNotification]);
+
+  useEffect(() => {
+    if (!state.settings.achieve) return;
+
+    let seenIds = [];
+    try {
+      seenIds = JSON.parse(localStorage.getItem(ACHIEVEMENT_STORAGE_KEY) || '[]');
+    } catch {
+      seenIds = [];
+    }
+
+    const seenSet = new Set(Array.isArray(seenIds) ? seenIds : []);
+    const newlyUnlocked = achievements.filter((a) => a.unlocked && !seenSet.has(a.id));
+    if (!newlyUnlocked.length) return;
+
+    newlyUnlocked.forEach((achievement) => {
+      pushNotification(`Achievement unlocked: ${achievement.title}`);
+      sendBrowserNotification('Achievement unlocked', achievement.title);
+      seenSet.add(achievement.id);
+    });
+
+    localStorage.setItem(ACHIEVEMENT_STORAGE_KEY, JSON.stringify([...seenSet]));
+  }, [state.settings.achieve, achievements, pushNotification, sendBrowserNotification]);
 
   const insights = useMemo(() => {
     const list = [];
@@ -928,18 +1044,37 @@ function App() {
       )}
 
       {page === 'notifications' && (
-        <section className="glass-card">
-          <h3>Notifications</h3>
-          <div className="list-stack" style={{ marginTop: 12 }}>
-            {NOTIFICATIONS.map((n, idx) => (
-              <article className="notif-row" key={`${n.time}-${idx}`}>
-                <span className={`notif-dot ${n.read ? 'read' : ''}`} />
-                <div>
-                  <p>{n.text}</p>
-                  <p className="muted">{n.time}</p>
-                </div>
-              </article>
-            ))}
+        <section className="dashboard-grid">
+          <div className="glass-card">
+            <h3>Notifications</h3>
+            <div className="list-stack" style={{ marginTop: 12 }}>
+              {appNotifications.length === 0 && <p className="muted">No notifications yet.</p>}
+              {appNotifications.map((n) => (
+                <article className="notif-row" key={n.id}>
+                  <span className={`notif-dot ${n.read ? 'read' : ''}`} />
+                  <div>
+                    <p>{n.text}</p>
+                    <p className="muted">{n.time}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+
+          <div className="glass-card">
+            <h3>Achievements</h3>
+            <p className="muted" style={{ marginTop: 8 }}>Unlock milestones and receive alerts when enabled.</p>
+            <div className="list-stack" style={{ marginTop: 12 }}>
+              {achievements.map((a) => (
+                <article className={`achievement-row ${a.unlocked ? 'unlocked' : 'locked'}`} key={a.id}>
+                  <div>
+                    <p className="row-title">{a.title}</p>
+                    <p className="muted">{a.detail}</p>
+                  </div>
+                  <strong>{a.unlocked ? 'Unlocked' : 'Locked'}</strong>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -967,19 +1102,33 @@ function App() {
           </div>
 
           <div className="settings-grid">
-            <article className="setting-row"><div><p>Daily reminders</p><p className="muted">Get prompted to log workouts</p></div><button type="button" onClick={() => toggleSetting('remind')}>{state.settings.remind ? 'ON' : 'OFF'}</button></article>
-            <article className="setting-row"><div><p>Achievement alerts</p><p className="muted">Celebrate your milestones</p></div><button type="button" onClick={() => toggleSetting('achieve')}>{state.settings.achieve ? 'ON' : 'OFF'}</button></article>
-            <article className="setting-row"><div><p>Imperial units</p><p className="muted">Switch to lbs</p></div><button type="button" onClick={() => toggleSetting('imperial')}>{state.settings.imperial ? 'ON' : 'OFF'}</button></article>
-            <article className="setting-row"><div><p>Show BMR in header</p><p className="muted">Display passive burn metric</p></div><button type="button" onClick={() => toggleSetting('bmr')}>{state.settings.bmr ? 'ON' : 'OFF'}</button></article>
-            <article className="setting-row"><div><p>Optimized calorie engine</p><p className="muted">Recompute legacy workouts for consistent active burn</p></div><button type="button" onClick={() => toggleSetting('useNormalizedCalories')}>{useNormalizedCalories ? 'ON' : 'OFF'}</button></article>
+            <article className="setting-row"><div><p>Daily reminders</p><p className="muted">Get prompted to log workouts</p></div><button type="button" className={`toggle-btn ${state.settings.remind ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('remind')}>{state.settings.remind ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row"><div><p>Achievement alerts</p><p className="muted">Celebrate your milestones</p></div><button type="button" className={`toggle-btn ${state.settings.achieve ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('achieve')}>{state.settings.achieve ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row"><div><p>Imperial units</p><p className="muted">Switch to lbs</p></div><button type="button" className={`toggle-btn ${state.settings.imperial ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('imperial')}>{state.settings.imperial ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row"><div><p>Show BMR in header</p><p className="muted">Display passive burn metric</p></div><button type="button" className={`toggle-btn ${state.settings.bmr ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('bmr')}>{state.settings.bmr ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row"><div><p>Optimized calorie engine</p><p className="muted">Recompute legacy workouts for consistent active burn</p></div><button type="button" className={`toggle-btn ${useNormalizedCalories ? 'is-on' : 'is-off'}`} onClick={() => toggleSetting('useNormalizedCalories')}>{useNormalizedCalories ? 'Enabled' : 'Disabled'}</button></article>
+            <article className="setting-row">
+              <div>
+                <p>Browser alerts permission</p>
+                <p className="muted">Current: {notificationPermission === 'unsupported' ? 'Not supported' : notificationPermission}</p>
+              </div>
+              <button
+                type="button"
+                className={`toggle-btn ${notificationPermission === 'granted' ? 'is-on' : 'is-off'}`}
+                onClick={requestNotificationPermission}
+                disabled={notificationPermission === 'granted' || notificationPermission === 'unsupported'}
+              >
+                {notificationPermission === 'granted' ? 'Enabled' : 'Enable Alerts'}
+              </button>
+            </article>
             <article className="setting-row">
               <div>
                 <p>Averaging window</p>
                 <p className="muted">Stabilize trends with 7 or 14 day averages</p>
               </div>
               <div className="row-actions compact">
-                <button type="button" className={avgWindowDays === 7 ? '' : 'btn-muted'} onClick={() => actions.updateSettings({ avgWindowDays: 7 })}>7D</button>
-                <button type="button" className={avgWindowDays === 14 ? '' : 'btn-muted'} onClick={() => actions.updateSettings({ avgWindowDays: 14 })}>14D</button>
+                <button type="button" className={`segment-btn ${avgWindowDays === 7 ? 'is-active' : 'is-idle'}`} onClick={() => actions.updateSettings({ avgWindowDays: 7 })}>7D</button>
+                <button type="button" className={`segment-btn ${avgWindowDays === 14 ? 'is-active' : 'is-idle'}`} onClick={() => actions.updateSettings({ avgWindowDays: 14 })}>14D</button>
               </div>
             </article>
             <article className="setting-row">
@@ -988,9 +1137,9 @@ function App() {
                 <p className="muted">Future chart projection length</p>
               </div>
               <div className="row-actions compact">
-                <button type="button" className={projectionDays === 30 ? '' : 'btn-muted'} onClick={() => actions.updateSettings({ projectionDays: 30 })}>30D</button>
-                <button type="button" className={projectionDays === 60 ? '' : 'btn-muted'} onClick={() => actions.updateSettings({ projectionDays: 60 })}>60D</button>
-                <button type="button" className={projectionDays === 90 ? '' : 'btn-muted'} onClick={() => actions.updateSettings({ projectionDays: 90 })}>90D</button>
+                <button type="button" className={`segment-btn ${projectionDays === 30 ? 'is-active' : 'is-idle'}`} onClick={() => actions.updateSettings({ projectionDays: 30 })}>30D</button>
+                <button type="button" className={`segment-btn ${projectionDays === 60 ? 'is-active' : 'is-idle'}`} onClick={() => actions.updateSettings({ projectionDays: 60 })}>60D</button>
+                <button type="button" className={`segment-btn ${projectionDays === 90 ? 'is-active' : 'is-idle'}`} onClick={() => actions.updateSettings({ projectionDays: 90 })}>90D</button>
               </div>
             </article>
             <article className="setting-row"><div><p>Export Data</p><p className="muted">Download JSON backup</p></div><button type="button" onClick={exportData}>Export</button></article>

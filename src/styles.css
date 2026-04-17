@@ -5,11 +5,6 @@
   --card-border: rgba(255, 255, 255, 0.16);
   --text-main: #f5f8ff;
   --text-soft: #9aa8c4;
-  --surface-soft: rgba(255, 255, 255, 0.04);
-  --surface-strong: rgba(20, 25, 40, 0.95);
-  --surface-line: rgba(255, 255, 255, 0.12);
-  --input-bg: rgba(255, 255, 255, 0.07);
-  --tab-text: #eef2ff;
   --accent-purple: #a78bfa;
   --accent-green: #34d399;
   --accent-cyan: #22d3ee;
@@ -33,29 +28,6 @@ body {
   min-height: 100vh;
 }
 
-body[data-theme='light'] {
-  color: #162036;
-  background:
-    radial-gradient(1200px 800px at -10% -20%, rgba(79, 70, 229, 0.12), transparent 60%),
-    radial-gradient(900px 700px at 110% -10%, rgba(14, 116, 144, 0.12), transparent 55%),
-    radial-gradient(1000px 700px at 40% 120%, rgba(15, 118, 110, 0.1), transparent 60%),
-    linear-gradient(170deg, #edf3ff, #dbe8fb);
-}
-
-.app-shell[data-theme='light'] {
-  --bg-main: #edf3ff;
-  --bg-alt: #dbe8fb;
-  --card-bg: rgba(255, 255, 255, 0.9);
-  --card-border: rgba(15, 23, 42, 0.12);
-  --text-main: #162036;
-  --text-soft: #4f5f82;
-  --surface-soft: rgba(15, 23, 42, 0.04);
-  --surface-strong: rgba(255, 255, 255, 0.92);
-  --surface-line: rgba(15, 23, 42, 0.16);
-  --input-bg: rgba(255, 255, 255, 0.95);
-  --tab-text: #1b2845;
-}
-
 h1,
 h2,
 h3,
@@ -77,72 +49,11 @@ p {
   gap: 16px;
 }
 
-.auth-shell {
-  max-width: 760px;
-  min-height: 100vh;
-  align-items: center;
-}
-
-.auth-page {
-  width: 100%;
-}
-
-.auth-card {
-  border: 1px solid var(--surface-line);
-  border-radius: 18px;
-  background: var(--surface-strong);
-  padding: 20px;
-  box-shadow: 0 24px 60px rgba(20, 30, 60, 0.22);
-}
-
-.auth-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.auth-tab.active {
-  border-color: rgba(34, 211, 238, 0.7);
-}
-
-.auth-form {
-  display: grid;
-  gap: 8px;
-}
-
-.password-field {
-  position: relative;
-}
-
-.password-field input {
-  width: 100%;
-  padding-right: 76px;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 1px solid var(--surface-line);
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-main);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.password-toggle:hover {
-  box-shadow: none;
-  transform: translateY(-50%);
-}
-
 .topbar {
   padding: 16px 18px;
   border-radius: var(--radius);
   border: 1px solid var(--card-border);
-  background: var(--surface-soft);
+  background: rgba(255, 255, 255, 0.04);
   backdrop-filter: blur(10px);
 }
 
@@ -197,9 +108,9 @@ p {
 .card {
   position: relative;
   border-radius: 18px;
-  background: var(--surface-strong);
+  background: rgba(20, 25, 40, 0.95);
   backdrop-filter: blur(10px);
-  border: 1px solid var(--surface-line);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
 
@@ -363,8 +274,8 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--surface-soft);
-  border: 1px solid var(--surface-line);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -435,8 +346,8 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border: 1px solid var(--surface-line);
-  background: var(--surface-soft);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 12px;
   padding: 10px 12px;
 }
@@ -478,7 +389,7 @@ p {
 }
 
 .btn-muted {
-  background: color-mix(in srgb, var(--surface-soft) 70%, transparent);
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .btn-danger {
@@ -533,7 +444,7 @@ p {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid var(--surface-line);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
   padding-top: 10px;
   margin-top: 10px;
 }
@@ -544,8 +455,8 @@ p {
 }
 
 .log-form {
-  border: 1px solid var(--surface-line);
-  background: var(--surface-soft);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
   border-radius: 14px;
   padding: 12px;
   display: grid;
@@ -570,8 +481,8 @@ input,
 select,
 button {
   border-radius: 12px;
-  border: 1px solid var(--surface-line);
-  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
   color: var(--text-main);
   font-size: 14px;
   padding: 10px 12px;
@@ -613,13 +524,35 @@ select:focus {
 
 button {
   cursor: pointer;
-  background: linear-gradient(120deg, rgba(156, 123, 255, 0.95), rgba(79, 216, 255, 0.95));
+  background: linear-gradient(120deg, rgba(20, 184, 166, 0.96), rgba(249, 115, 22, 0.96));
   font-weight: 700;
 }
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(94, 120, 255, 0.3);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+}
+
+.toggle-btn {
+  min-width: 112px;
+}
+
+.toggle-btn.is-on {
+  background: linear-gradient(120deg, rgba(16, 185, 129, 0.96), rgba(6, 182, 212, 0.96));
+}
+
+.toggle-btn.is-off {
+  background: linear-gradient(120deg, rgba(71, 85, 105, 0.95), rgba(100, 116, 139, 0.95));
+  color: #e2e8f0;
+}
+
+.segment-btn.is-active {
+  background: linear-gradient(120deg, rgba(20, 184, 166, 0.96), rgba(249, 115, 22, 0.96));
+}
+
+.segment-btn.is-idle {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
 }
 
 .profile-section {
@@ -678,10 +611,10 @@ button:hover {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  border: 1px solid var(--surface-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 10px 12px;
-  background: var(--surface-soft);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .notif-dot {
@@ -696,6 +629,26 @@ button:hover {
   background: var(--text-soft);
 }
 
+.achievement-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.achievement-row.unlocked {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.45);
+}
+
+.achievement-row.locked {
+  background: rgba(100, 116, 139, 0.18);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
 .settings-grid {
   margin-top: 10px;
   display: grid;
@@ -707,10 +660,10 @@ button:hover {
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  border: 1px solid var(--surface-line);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   padding: 10px 12px;
-  background: var(--surface-soft);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .fab-wrap {
